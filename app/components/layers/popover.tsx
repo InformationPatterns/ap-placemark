@@ -35,6 +35,7 @@ import { FORM_ERROR, Form } from "app/core/components/Form";
 import { LabeledTextField } from "app/core/components/LabeledTextField";
 import { useZoomTo } from "app/hooks/use_zoom_to";
 import LAYERS from "app/lib/default_layers";
+import { FARM_LAYERS, farmToLayerConfig } from "app/lib/farm_layers";
 import { newFeatureId } from "app/lib/id";
 import { usePersistence } from "app/lib/persistence/context";
 import type { Moment } from "app/lib/persistence/moment";
@@ -60,7 +61,8 @@ type Mode =
   | "custom"
   | "custom-xyz"
   | "custom-mapbox"
-  | "custom-tilejson";
+  | "custom-tilejson"
+  | "farms";
 
 const layerModeAtom = atom<Mode>("initial");
 
@@ -459,6 +461,88 @@ function AnyLayer({
     .exhaustive();
 }
 
+function FarmLayerList({
+  items,
+  transact,
+  nextAt,
+  onDone,
+}: {
+  items: ILayerConfig[];
+  transact: ReturnType<ReturnType<typeof usePersistence>["useTransact"]>;
+  nextAt: string;
+  onDone: () => void;
+}) {
+  const setMode = useSetAtom(layerModeAtom);
+  const [search, setSearch] = useState("");
+
+  const filtered = search
+    ? FARM_LAYERS.filter((farm) =>
+        farm.name.toLowerCase().includes(search.toLowerCase()),
+      )
+    : FARM_LAYERS;
+
+  return (
+    <div className="p-3">
+      <div className="flex justify-between items-center pb-2">
+        <div className="font-bold">Farms</div>
+        <BackButton to="initial" />
+      </div>
+      <input
+        type="text"
+        className="w-full px-2 py-1 mb-2 text-sm border rounded
+          border-gray-300 dark:border-gray-600
+          dark:bg-gray-800 dark:text-white"
+        placeholder="Search farms…"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        autoFocus
+      />
+      <div
+        className="placemark-scrollbar overflow-y-auto space-y-0.5"
+        style={{ maxHeight: 250 }}
+      >
+        {filtered.map((farm) => (
+          <button
+            key={farm.groupId}
+            type="button"
+            className={`w-full block text-left ${E.menuItemLike({ variant: "default" })}`}
+            onClick={async () => {
+              const layer = farmToLayerConfig(farm);
+              const { deleteLayerConfigs, oldAt } =
+                maybeDeleteOldMapboxLayer(items);
+              if (deleteLayerConfigs.length) {
+                toast("Mapbox layer replaced");
+              }
+              await transact({
+                note: "Add farm layer",
+                deleteLayerConfigs,
+                putLayerConfigs: [
+                  {
+                    ...layer,
+                    visibility: true,
+                    tms: false,
+                    opacity: 1,
+                    at: oldAt || nextAt,
+                    id: newFeatureId(),
+                    labelVisibility: true,
+                  },
+                ],
+              });
+              setMode("initial");
+              onDone();
+            }}
+          >
+            {farm.name}
+          </button>
+        ))}
+        {filtered.length === 0 && (
+          <div className="text-sm text-gray-500 py-2">No farms found</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function AddLayer() {
   const rep = usePersistence();
   const transact = rep.useTransact();
@@ -500,6 +584,15 @@ function AddLayer() {
         />
       ))}
       <E.DivSeparator />
+      <button
+        type="button"
+        className={`w-full block ${E.menuItemLike({ variant: "default" })}`}
+        onClick={() => {
+          setMode("farms");
+        }}
+      >
+        Farms
+      </button>
       <button
         type="button"
         className={`w-full block ${E.menuItemLike({ variant: "default" })}`}
@@ -573,6 +666,14 @@ function AddLayer() {
                 <div className="p-3">
                   <TileJSONLayer onDone={() => setOpen(false)} />
                 </div>
+              ))
+              .with("farms", () => (
+                <FarmLayerList
+                  items={items}
+                  transact={transact}
+                  nextAt={nextAt}
+                  onDone={() => setOpen(false)}
+                />
               ))
               .exhaustive()}
           </Suspense>
