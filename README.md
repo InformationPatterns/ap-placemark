@@ -1,61 +1,67 @@
-# Play
+# AP Maps
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fplacemark%2Fplacemark&env=NEXT_PUBLIC_MAPBOX_TOKEN)
+Editor de mapas geoespacial basado en [Placemark Play](https://github.com/placemark/placemark), personalizado para AgroPatterns. Permite visualizar y editar datos geográficos directamente en el navegador, con soporte para estilos de fincas Mapbox y simbolización por categorías.
 
-At some point during Placemark development, I tried making a free-as-in-beer
-interface that supported a lot of the things that Placemark could, but for free.
-The main difference between this and the main application being that Placemark Play
-wouldn't have a real server component, so it incurred no real storage or server
-costs for me.
+## Requisitos previos
 
-People like free stuff and a lot of people don't want or need Placemark's server
-storage for maps, so Play got a bit of a following. This subproject is trying to
-run Play again.
+- **Node.js** >= 22.19.0
+- **pnpm** 10.13.1
+- Se recomienda usar [mise](https://mise.jdx.dev/) para manejar las versiones automáticamente
 
-It's not easy, I'll tell you that! Placemark was, for many reasons, a monolithic
-application, and Play was part of that monolith. So there are challenges to slicing
-off just a bit of the application.
+## Instalación
 
-This directory is basically the application, _minus_ Blitz and the database layer
-and all of that. It's a real experiment - expect breakage, and hopefully contribute
-pull requests. I'm happy to try and make Placemark useful to folks, and don't
-feel bad or bitter about the fate of the company, but realistically if the
-open source project is to succeed, it'll need contributors as well as users.
+1. Clonar el repositorio e instalar dependencias:
 
-## Getting started
-
-There are more sophisticated approaches using Docker or Render (see files), but
-the following simple approach works locally on macOS:
-
-1. Clone the repository, change to this directory, and install dependencies:
-
-```
-git clone
+```sh
+git clone <url-del-repositorio>
+cd ap-placemark
 pnpm install
 ```
 
-2. Obtain a [Mapbox public access token](https://account.mapbox.com/)
-   ([docs](https://docs.mapbox.com/help/getting-started/access-tokens/)) and
-   [Geocode Earth token](https://app.geocode.earth/keys)
-   ([docs](https://geocode.earth/docs/intro/authentication/)).
-
-3. Build the package with the tokens from the previous step:
+2. Crear el archivo `.env` con tu token de Mapbox (ver `.env.example`):
 
 ```sh
-NEXT_PUBLIC_MAPBOX_TOKEN="<your Mapbox public access token>" \
-NEXT_PUBLIC_GEOCODE_EARTH_TOKEN="<your Geocode Earth token>" \
-pnpm build
-
+VITE_PUBLIC_MAPBOX_TOKEN=pk.tu_token_aqui
+VITE_PUBLIC_GEOCODE_EARTH_TOKEN=tu_token_aqui
 ```
 
-4. Start the server:
+Puedes obtener el token de Mapbox en [account.mapbox.com](https://account.mapbox.com/) y el de Geocode Earth en [app.geocode.earth/keys](https://app.geocode.earth/keys).
+
+## Ejecución
+
+Para iniciar el servidor de desarrollo:
 
 ```sh
-npx serve@latest out
+pnpm dev
 ```
 
-5. Visit [http://localhost:3000](http://localhost:3000)
+O si configuraste el alias:
 
-If you're planning to run this often or publicly, take care to secure your
-tokens better by adding [URL restrictions to the Mapbox token](https://docs.mapbox.com/help/getting-started/access-tokens/#url-restrictions) and setting allowed Referrer Hostnames to the Geocode Earth one,
-and consider copying and revising the `.env.sample` file.
+```sh
+ap-maps
+```
+
+Luego visita [http://localhost:5173](http://localhost:5173). Desde Chrome puedes instalarlo como aplicación de escritorio usando el menú > "Instalar Placemark...".
+
+## Comandos disponibles
+
+| Comando | Descripción |
+|---|---|
+| `pnpm dev` | Servidor de desarrollo |
+| `pnpm build` | Compilar para producción |
+| `pnpm lint` | Verificar código con Biome |
+| `pnpm tsc` | Verificar tipos TypeScript |
+| `pnpm test` | Ejecutar tests |
+| `pnpm test:watch` | Tests en modo observador |
+
+## Funcionalidades principales
+
+- **Fincas**: Selector de estilos Mapbox por finca, con centrado automático y nombre visible en el mapa
+- **Capas**: Soporte para capas Mapbox, XYZ y TileJSON
+- **Simbolización**: Categorización por colores sin límite de categorías
+- **Formatos**: Importar/exportar GeoJSON, KML, CSV, Shapefile, GPX, TopoJSON y más
+- **Edición**: Dibujar puntos, líneas, polígonos, rectángulos y círculos
+
+## Datos de fincas
+
+Los estilos de fincas se configuran en `data/mabox_styles.csv` con las columnas: `Finca`, `GroupId`, `Survey`, `2025`, `MapboxStyle`.

@@ -1,5 +1,6 @@
 import { Dialogs } from "app/components/dialogs";
 import Drop from "app/components/drop";
+import { FarmNameOverlay } from "app/components/farm_name_overlay";
 import { MapComponent } from "app/components/map_component";
 import { MenuBarPlay } from "app/components/menu_bar";
 import Modes from "app/components/modes";
@@ -339,6 +340,7 @@ function DraggableMap({
     >
       <div className="flex-auto relative">
         <MapComponent setMap={setMap} />
+        <FarmNameOverlay />
       </div>
       {layout === "FLOATING" ? null : <Legend />}
       <div

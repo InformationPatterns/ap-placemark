@@ -56,6 +56,7 @@ import { atom, useAtom, useAtomValue } from "jotai";
 import find from "lodash/find";
 import last from "lodash/last";
 import { Accordion, Popover as P } from "radix-ui";
+import randomColor from "randomcolor";
 import { Fragment, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { dataAtom, panelSymbolizationExportOpen } from "state/jotai";
@@ -652,7 +653,25 @@ function CategoryWizard() {
         )!;
         const dataValues = Array.from(options.get(values.property) || []);
 
-        const colors = ramp.colors[DEFAULT_CLASSES];
+        // Find the largest available palette for this ramp
+        const paletteKeys = Object.keys(ramp.colors)
+          .map(Number)
+          .filter((k) => ramp.colors[k as keyof typeof ramp.colors] != null)
+          .sort((a, b) => b - a);
+        const largestKey = (paletteKeys[0] || DEFAULT_CLASSES) as keyof typeof ramp.colors;
+        const paletteColors = ramp.colors[largestKey] || ramp.colors[DEFAULT_CLASSES] || [];
+
+        // Generate colors: use palette colors first, then randomcolor for extras
+        const colors: string[] = [];
+        for (let i = 0; i < dataValues.length; i++) {
+          if (i < paletteColors.length) {
+            colors.push(paletteColors[i]);
+          } else {
+            colors.push(
+              randomColor({ seed: i * 7 + dataValues.length, luminosity: "bright" }),
+            );
+          }
+        }
 
         const newSymbolization: ISymbolizationCategorical = {
           type: "categorical",
@@ -660,7 +679,7 @@ function CategoryWizard() {
           defaultColor: values.defaultColor,
           defaultOpacity: values.defaultOpacity,
           property: values.property,
-          stops: dataValues.slice(0, colors.length).map((input, i) => {
+          stops: dataValues.map((input, i) => {
             return {
               input,
               output: colors[i],

@@ -177,6 +177,8 @@ export const addMetadataWithGeocoderAtom = atomWithStorage(
   false,
 );
 
+export const activeFarmNameAtom = atom<string | null>(null);
+
 export type {
   DialogStateCastProperty as ModalStateCastProperty,
   DialogStateImport as ModalStateImport,

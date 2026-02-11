@@ -47,10 +47,11 @@ import { atom, useAtom, useAtomValue, useSetAtom } from "jotai";
 import clamp from "lodash/clamp";
 import { Maybe } from "purify-ts/Maybe";
 import { Popover as P, Tooltip as T } from "radix-ui";
-import { Suspense, useState } from "react";
+import { Suspense, useContext, useState } from "react";
 import toast from "react-hot-toast";
 import { useQuery as reactUseQuery } from "react-query";
-import { layerConfigAtom } from "state/jotai";
+import { activeFarmNameAtom, layerConfigAtom } from "state/jotai";
+import { MapContext } from "app/context/map_context";
 import { match } from "ts-pattern";
 import { type ILayerConfig, zLayerConfig } from "types";
 import { ZodError, z } from "zod";
@@ -473,6 +474,8 @@ function FarmLayerList({
   onDone: () => void;
 }) {
   const setMode = useSetAtom(layerModeAtom);
+  const setFarmName = useSetAtom(activeFarmNameAtom);
+  const map = useContext(MapContext);
   const [search, setSearch] = useState("");
 
   const filtered = search
@@ -484,7 +487,7 @@ function FarmLayerList({
   return (
     <div className="p-3">
       <div className="flex justify-between items-center pb-2">
-        <div className="font-bold">Farms</div>
+        <div className="font-bold">Fincas</div>
         <BackButton to="initial" />
       </div>
       <input
@@ -528,6 +531,25 @@ function FarmLayerList({
                   },
                 ],
               });
+              setFarmName(farm.name);
+              // Fetch the style JSON to get the center coordinates
+              try {
+                const styleUrl =
+                  layer.url.replace(
+                    "mapbox://styles/",
+                    "https://api.mapbox.com/styles/v1/",
+                  ) + `?access_token=${layer.token}`;
+                const resp = await fetch(styleUrl);
+                const styleJson = await resp.json();
+                if (styleJson.center && map?.map) {
+                  map.map.flyTo({
+                    center: styleJson.center,
+                    zoom: 15,
+                  });
+                }
+              } catch (_e) {
+                // Style loaded but center not available — no-op
+              }
               setMode("initial");
               onDone();
             }}
@@ -548,13 +570,24 @@ function AddLayer() {
   const transact = rep.useTransact();
   const [isOpen, setOpen] = useState<boolean>(false);
   const [mode, setMode] = useAtom(layerModeAtom);
+  const setFarmName = useSetAtom(activeFarmNameAtom);
   const layerConfigs = useAtomValue(layerConfigAtom);
   const items = [...layerConfigs.values()];
   const nextAt = getNextAt(items);
 
   const defaultLayerList = (
     <div className="py-2">
-      <E.DivLabel>Default layers</E.DivLabel>
+      <button
+        type="button"
+        className={`w-full block ${E.menuItemLike({ variant: "default" })}`}
+        onClick={() => {
+          setMode("farms");
+        }}
+      >
+        Fincas
+      </button>
+      <E.DivSeparator />
+      <E.DivLabel>Capas base</E.DivLabel>
       {Object.entries(LAYERS).map(([id, mapboxLayer]) => (
         <DefaultLayerItem
           key={id}
@@ -580,19 +613,11 @@ function AddLayer() {
                 },
               ],
             });
+            setFarmName(null);
           }}
         />
       ))}
       <E.DivSeparator />
-      <button
-        type="button"
-        className={`w-full block ${E.menuItemLike({ variant: "default" })}`}
-        onClick={() => {
-          setMode("farms");
-        }}
-      >
-        Farms
-      </button>
       <button
         type="button"
         className={`w-full block ${E.menuItemLike({ variant: "default" })}`}
@@ -906,7 +931,7 @@ export function LayersPopover() {
   return (
     <div>
       <div className="flex justify-between pb-2">
-        <div className="font-bold">Layers</div>
+        <div className="font-bold">Mapas</div>
         <div className="relative">
           <AddLayer />
         </div>

@@ -154,7 +154,7 @@ importers:
         version: 18.3.7(@types/react@18.3.23)
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/node@22.16.5)(jiti@2.5.1)(jsdom@26.1.0)(yaml@2.8.0))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.16.5)(jiti@2.5.1)(jsdom@26.1.0)(yaml@2.8.0))
       '@xmldom/xmldom':
         specifier: ^0.9.8
         version: 0.9.8
@@ -404,7 +404,7 @@ importers:
         version: 5.1.4(typescript@5.8.3)(vite@7.0.6(@types/node@22.16.5)(jiti@2.5.1)(yaml@2.8.0))
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.16.5)(jiti@2.5.1)(jsdom@26.1.0)(yaml@2.8.0)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@22.16.5)(jiti@2.5.1)(jsdom@26.1.0)(yaml@2.8.0)
 
 packages:
 
@@ -2309,6 +2309,9 @@ packages:
   '@types/d3-geo@3.1.0':
     resolution: {integrity: sha512-856sckF0oP/diXtS4jNsiQw/UuK5fQG8l/a9VVLeSouf1/PPbBE1i1W852zVwKwYCBkFJJB7nCFTbk6UMEXBOQ==}
 
+  '@types/debug@4.1.12':
+    resolution: {integrity: sha512-vIChWdVG3LG1SMxEvI/AK+FWJthlrqlTu7fbrlywTkkaONwk/UAGaULXRlf8vkzFBLVm0zkMdCquhL5aOjhXPQ==}
+
   '@types/deep-eql@4.0.2':
     resolution: {integrity: sha512-c9h9dVVMigMPc4bwTvC5dxqtqJZwQPePsWjPlpSOnojbor6pGqdk541lfA7AqFQr5pB1BRdq0juY9db81BwyFw==}
 
@@ -2352,6 +2355,9 @@ packages:
 
   '@types/mdurl@2.0.0':
     resolution: {integrity: sha512-RGdgjQUZba5p6QEFAVx2OGb8rQDL/cPRG7GiedRzMcJ1tYnUANBncjbSB1NRGwbvjcPeikRABz2nshyPk1bhWg==}
+
+  '@types/ms@2.1.0':
+    resolution: {integrity: sha512-GsCCIZDE/p3i96vtEqx+7dBUGXrc7zeSK3wwPHIaRThS+9OhWIXRqzs4d6k1SVU8g91DrNRWxWUGhp5KXQb2VA==}
 
   '@types/node@22.16.5':
     resolution: {integrity: sha512-bJFoMATwIGaxxx8VJPeM8TonI8t579oRvgAuT8zFugJsJZgzqv0Fu8Mhp68iecjzG7cnN3mO2dJQ5uUM2EFrgQ==}
@@ -6681,6 +6687,11 @@ snapshots:
     dependencies:
       '@types/geojson': 7946.0.16
 
+  '@types/debug@4.1.12':
+    dependencies:
+      '@types/ms': 2.1.0
+    optional: true
+
   '@types/deep-eql@4.0.2': {}
 
   '@types/deep-freeze@0.1.5': {}
@@ -6718,6 +6729,9 @@ snapshots:
       '@types/mdurl': 2.0.0
 
   '@types/mdurl@2.0.0': {}
+
+  '@types/ms@2.1.0':
+    optional: true
 
   '@types/node@22.16.5':
     dependencies:
@@ -6776,7 +6790,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@vitest/coverage-v8@3.2.4(vitest@3.2.4(@types/node@22.16.5)(jiti@2.5.1)(jsdom@26.1.0)(yaml@2.8.0))':
+  '@vitest/coverage-v8@3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.16.5)(jiti@2.5.1)(jsdom@26.1.0)(yaml@2.8.0))':
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@bcoe/v8-coverage': 1.0.2
@@ -6791,7 +6805,7 @@ snapshots:
       std-env: 3.9.0
       test-exclude: 7.0.1
       tinyrainbow: 2.0.0
-      vitest: 3.2.4(@types/node@22.16.5)(jiti@2.5.1)(jsdom@26.1.0)(yaml@2.8.0)
+      vitest: 3.2.4(@types/debug@4.1.12)(@types/node@22.16.5)(jiti@2.5.1)(jsdom@26.1.0)(yaml@2.8.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -9215,7 +9229,7 @@ snapshots:
       jiti: 2.5.1
       yaml: 2.8.0
 
-  vitest@3.2.4(@types/node@22.16.5)(jiti@2.5.1)(jsdom@26.1.0)(yaml@2.8.0):
+  vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.16.5)(jiti@2.5.1)(jsdom@26.1.0)(yaml@2.8.0):
     dependencies:
       '@types/chai': 5.2.2
       '@vitest/expect': 3.2.4
@@ -9241,6 +9255,7 @@ snapshots:
       vite-node: 3.2.4(@types/node@22.16.5)(jiti@2.5.1)(yaml@2.8.0)
       why-is-node-running: 2.3.0
     optionalDependencies:
+      '@types/debug': 4.1.12
       '@types/node': 22.16.5
       jsdom: 26.1.0
     transitivePeerDependencies:

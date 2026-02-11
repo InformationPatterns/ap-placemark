@@ -1,4 +1,9 @@
-import { GearIcon, Pencil2Icon } from "@radix-ui/react-icons";
+import {
+  ChevronDownIcon,
+  ChevronUpIcon,
+  GearIcon,
+  Pencil2Icon,
+} from "@radix-ui/react-icons";
 import { MapContext } from "app/context/map_context";
 import { linearGradient } from "app/lib/color";
 import { SCALE_UNITS, type ScaleUnit, zScaleUnit } from "app/lib/constants";
@@ -307,6 +312,7 @@ export function Legend() {
   const rep = usePersistence();
   const [meta] = rep.useMetadata();
   const { symbolization } = meta;
+  const [collapsed, setCollapsed] = useState(false);
 
   if (!symbolization) return null;
 
@@ -323,7 +329,23 @@ export function Legend() {
   return (
     <div className="space-y-1 absolute bottom-0 right-10 w-48">
       <ScaleControl />
-      <LegendContainer>{legend}</LegendContainer>
+      <LegendContainer>
+        <button
+          type="button"
+          className="w-full flex items-center justify-between px-2 py-1
+            text-xs font-medium cursor-pointer
+            hover:bg-gray-100 dark:hover:bg-gray-800 rounded-t"
+          onClick={() => setCollapsed((c) => !c)}
+        >
+          Legend
+          {collapsed ? (
+            <ChevronUpIcon className="w-3 h-3" />
+          ) : (
+            <ChevronDownIcon className="w-3 h-3" />
+          )}
+        </button>
+        {collapsed ? null : legend}
+      </LegendContainer>
     </div>
   );
 }
