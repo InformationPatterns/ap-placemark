@@ -29,6 +29,7 @@ import {
   PlusIcon,
   TrashIcon,
 } from "@radix-ui/react-icons";
+import { useQuery } from "@tanstack/react-query";
 import * as E from "app/components/elements";
 import { TextWell } from "app/components/elements";
 import { FORM_ERROR, Form } from "app/core/components/Form";
@@ -49,9 +50,13 @@ import { Maybe } from "purify-ts/Maybe";
 import { Popover as P, Tooltip as T } from "radix-ui";
 import { Suspense, useContext, useState } from "react";
 import toast from "react-hot-toast";
+<<<<<<< HEAD
 import { useQuery as reactUseQuery } from "react-query";
 import { activeFarmNameAtom, layerConfigAtom } from "state/jotai";
 import { MapContext } from "app/context/map_context";
+=======
+import { layerConfigAtom } from "state/jotai";
+>>>>>>> 3d4f655fd1306f3f6e8124309e4a4658cc7c5109
 import { match } from "ts-pattern";
 import { type ILayerConfig, zLayerConfig } from "types";
 import { ZodError, z } from "zod";
@@ -716,11 +721,12 @@ function SortableLayerConfig({ layerConfig }: { layerConfig: ILayerConfig }) {
   const transact = rep.useTransact();
   const [editing, setEditing] = useState<boolean>(false);
 
-  const { data: tilejson, isError } = reactUseQuery(
-    layerConfig.url,
-    async () => layerConfig.type === "TILEJSON" && getTileJSON(layerConfig.url),
-    { suspense: false, retry: false },
-  );
+  const { data: tilejson, isError } = useQuery({
+    queryKey: [layerConfig.url],
+    queryFn: async () =>
+      layerConfig.type === "TILEJSON" && getTileJSON(layerConfig.url),
+    retry: false,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),

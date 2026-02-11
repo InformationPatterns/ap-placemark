@@ -11,13 +11,12 @@ import { atom, type createStore } from "jotai";
 import { atomWithStorage, selectAtom } from "jotai/utils";
 import { focusAtom } from "jotai-optics";
 import { atomWithMachine } from "jotai-xstate";
-import { CIRCLE_TYPE, MODE_INFO, Mode, modeAtom } from "state/mode";
+import { CIRCLE_TYPE, MODE_INFO, Mode, ROUTE_TYPE, modeAtom } from "state/mode";
 import type { SetOptional } from "type-fest";
 import {
   type FeatureMap,
   type FolderMap,
   type IFolder,
-  type IPresence,
   type LayerConfigMap,
   SYMBOLIZATION_NONE,
 } from "types";
@@ -90,16 +89,6 @@ export const selectionAtom = focusAtom(dataAtom, (optic) =>
   optic.prop("selection"),
 );
 
-/**
- * User presences, keyed by user id
- */
-export const presencesAtom = atom<{
-  presences: Map<number, IPresence>;
-}>({
-  get presences() {
-    return new Map();
-  },
-});
 
 export const memoryMetaAtom = atom<Omit<PersistenceMetadataMemory, "type">>({
   symbolization: SYMBOLIZATION_NONE,
@@ -337,4 +326,9 @@ export const tableFilterAtom = atom<FilterOptions>(initialFilterValues);
 export const circleTypeAtom = atomWithStorage<CIRCLE_TYPE>(
   "circleType",
   CIRCLE_TYPE.MERCATOR,
+);
+
+export const routeTypeAtom = atomWithStorage<ROUTE_TYPE>(
+  "routeType",
+  ROUTE_TYPE.WALKING,
 );
