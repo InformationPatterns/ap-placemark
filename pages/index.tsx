@@ -28,7 +28,7 @@ function App() {
                   <PersistenceContext.Provider
                     value={new MemPersistence(idMap.current, store)}
                   >
-                    <title>Placemark Play</title>
+                    <title>AgroPatterns</title>
                     <PlacemarkPlay />
                   </PersistenceContext.Provider>
                 </Provider>

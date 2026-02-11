@@ -1,16 +1,21 @@
-import { LayersIcon, MagnifyingGlassIcon } from "@radix-ui/react-icons";
+import {
+  HomeIcon,
+  LayersIcon,
+  MagnifyingGlassIcon,
+} from "@radix-ui/react-icons";
 import * as E from "app/components/elements";
 import { getIsMac, localizeKeybinding } from "app/lib/utils";
 import { useSetAtom } from "jotai";
 import { Popover, Tooltip as T } from "radix-ui";
-import { memo, Suspense } from "react";
+import { memo, Suspense, useState } from "react";
 import { dialogAtom } from "state/jotai";
 import { SEARCH_KEYBINDING } from "./dialogs/cheatsheet";
-import { LayersPopover } from "./layers/popover";
+import { FincasPopover, LayersPopover } from "./layers/popover";
 
 export const Visual = memo(function Visual() {
   const setDialogState = useSetAtom(dialogAtom);
   const isMac = getIsMac();
+  const [fincasOpen, setFincasOpen] = useState(false);
   return (
     <div className="flex items-center">
       <div className="block h-10 w-10 p-1 flex items-stretch">
@@ -38,6 +43,28 @@ export const Visual = memo(function Visual() {
       </div>
 
       <T.Root>
+        <Popover.Root open={fincasOpen} onOpenChange={setFincasOpen}>
+          <div className="h-10 w-10 p-1 flex items-stretch">
+            <T.Trigger asChild>
+              <Popover.Trigger aria-label="Fincas" asChild>
+                <E.Button variant="quiet">
+                  <HomeIcon />
+                </E.Button>
+              </Popover.Trigger>
+            </T.Trigger>
+          </div>
+          <E.PopoverContent2 size="sm">
+            <Suspense fallback={<E.Loading size="sm" />}>
+              <FincasPopover onDone={() => setFincasOpen(false)} />
+            </Suspense>
+          </E.PopoverContent2>
+        </Popover.Root>
+        <E.TContent side="bottom">
+          <span className="whitespace-nowrap">Fincas</span>
+        </E.TContent>
+      </T.Root>
+
+      <T.Root>
         <Popover.Root>
           <div className="h-10 w-10 p-1 flex items-stretch">
             <T.Trigger asChild>
@@ -55,7 +82,7 @@ export const Visual = memo(function Visual() {
           </E.PopoverContent2>
         </Popover.Root>
         <E.TContent side="bottom">
-          <span className="whitespace-nowrap">Manage background layers</span>
+          <span className="whitespace-nowrap">Capas</span>
         </E.TContent>
       </T.Root>
     </div>

@@ -50,13 +50,8 @@ import { Maybe } from "purify-ts/Maybe";
 import { Popover as P, Tooltip as T } from "radix-ui";
 import { Suspense, useContext, useState } from "react";
 import toast from "react-hot-toast";
-<<<<<<< HEAD
-import { useQuery as reactUseQuery } from "react-query";
 import { activeFarmNameAtom, layerConfigAtom } from "state/jotai";
 import { MapContext } from "app/context/map_context";
-=======
-import { layerConfigAtom } from "state/jotai";
->>>>>>> 3d4f655fd1306f3f6e8124309e4a4658cc7c5109
 import { match } from "ts-pattern";
 import { type ILayerConfig, zLayerConfig } from "types";
 import { ZodError, z } from "zod";
@@ -549,7 +544,7 @@ function FarmLayerList({
                 if (styleJson.center && map?.map) {
                   map.map.flyTo({
                     center: styleJson.center,
-                    zoom: 15,
+                    zoom: 15.5,
                   });
                 }
               } catch (_e) {
@@ -582,16 +577,6 @@ function AddLayer() {
 
   const defaultLayerList = (
     <div className="py-2">
-      <button
-        type="button"
-        className={`w-full block ${E.menuItemLike({ variant: "default" })}`}
-        onClick={() => {
-          setMode("farms");
-        }}
-      >
-        Fincas
-      </button>
-      <E.DivSeparator />
       <E.DivLabel>Capas base</E.DivLabel>
       {Object.entries(LAYERS).map(([id, mapboxLayer]) => (
         <DefaultLayerItem
@@ -697,14 +682,7 @@ function AddLayer() {
                   <TileJSONLayer onDone={() => setOpen(false)} />
                 </div>
               ))
-              .with("farms", () => (
-                <FarmLayerList
-                  items={items}
-                  transact={transact}
-                  nextAt={nextAt}
-                  onDone={() => setOpen(false)}
-                />
-              ))
+              .with("farms", () => defaultLayerList)
               .exhaustive()}
           </Suspense>
         </E.StyledPopoverContent>
@@ -889,6 +867,144 @@ function SortableLayerConfig({ layerConfig }: { layerConfig: ILayerConfig }) {
         </div>
       </div>
     </div>
+  );
+}
+
+export function FincasPopover({ onDone }: { onDone: () => void }) {
+  const rep = usePersistence();
+  const transact = rep.useTransact();
+  const layerConfigs = useAtomValue(layerConfigAtom);
+  const items = [...layerConfigs.values()];
+  const setFarmName = useSetAtom(activeFarmNameAtom);
+  const map = useContext(MapContext);
+  const [search, setSearch] = useState("");
+  const nextAt = getNextAt(items);
+
+  const filtered = search
+    ? FARM_LAYERS.filter((farm) =>
+        farm.name.toLowerCase().includes(search.toLowerCase()),
+      )
+    : FARM_LAYERS;
+
+  return (
+    <>
+      <div className="font-bold pb-2">Fincas</div>
+      <input
+        type="text"
+        className="w-full px-2 py-1 mb-2 text-sm border rounded
+          border-gray-300 dark:border-gray-600
+          dark:bg-gray-800 dark:text-white"
+        placeholder="Buscar finca…"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        autoFocus
+      />
+      <div
+        className="placemark-scrollbar overflow-y-auto space-y-0.5"
+        style={{ maxHeight: 250 }}
+      >
+        {filtered.map((farm) => (
+          <button
+            key={farm.groupId}
+            type="button"
+            className={`w-full block text-left ${E.menuItemLike({ variant: "default" })}`}
+            onClick={async () => {
+              const layer = farmToLayerConfig(farm);
+              const { deleteLayerConfigs, oldAt } =
+                maybeDeleteOldMapboxLayer(items);
+              if (deleteLayerConfigs.length) {
+                toast("Mapbox layer replaced");
+              }
+              await transact({
+                note: "Add farm layer",
+                deleteLayerConfigs,
+                putLayerConfigs: [
+                  {
+                    ...layer,
+                    visibility: true,
+                    tms: false,
+                    opacity: 1,
+                    at: oldAt || nextAt,
+                    id: newFeatureId(),
+                    labelVisibility: true,
+                  },
+                ],
+              });
+              setFarmName(farm.name);
+
+              // Fetch the style JSON to get the center, then fly
+              // there after the map finishes loading the new style.
+              if (map?.map) {
+                const m = map.map;
+                try {
+                  const styleUrl =
+                    layer.url.replace(
+                      "mapbox://styles/",
+                      "https://api.mapbox.com/styles/v1/",
+                    ) + `?access_token=${layer.token}`;
+                  const resp = await fetch(styleUrl);
+                  const styleJson = await resp.json();
+                  const styleCenter = styleJson.center as
+                    | [number, number]
+                    | undefined;
+
+                  // Wait for new style to be applied, then tiles
+                  // to load, then center on a bloque-labels
+                  // feature (or fall back to the style center).
+                  m.once("styledata", () => {
+                    m.once("idle", () => {
+                      try {
+                        const style = m.getStyle();
+                        const bloqueLayer = style?.layers?.find(
+                          (l) => l.id === "bloque-labels",
+                        );
+                        if (bloqueLayer && "source" in bloqueLayer) {
+                          const features = m.querySourceFeatures(
+                            bloqueLayer.source as string,
+                            {
+                              sourceLayer:
+                                (bloqueLayer as any)["source-layer"] ??
+                                "bloque-labels",
+                            },
+                          );
+                          if (features.length > 0) {
+                            const geom = features[0].geometry;
+                            let center: [number, number] | undefined;
+                            if (geom.type === "Point") {
+                              center = geom.coordinates as [
+                                number,
+                                number,
+                              ];
+                            }
+                            if (center) {
+                              m.flyTo({ center, zoom: 15.5 });
+                              return;
+                            }
+                          }
+                        }
+                      } catch (_e) {}
+                      // Fallback: use the style's center
+                      if (styleCenter) {
+                        m.flyTo({ center: styleCenter, zoom: 15.5 });
+                      }
+                    });
+                  });
+                } catch (_e) {}
+              }
+
+              onDone();
+            }}
+          >
+            {farm.name}
+          </button>
+        ))}
+        {filtered.length === 0 && (
+          <div className="text-sm text-gray-500 py-2">
+            No se encontraron fincas
+          </div>
+        )}
+      </div>
+    </>
   );
 }
 
