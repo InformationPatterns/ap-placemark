@@ -50,7 +50,7 @@ import { Maybe } from "purify-ts/Maybe";
 import { Popover as P, Tooltip as T } from "radix-ui";
 import { Suspense, useContext, useState } from "react";
 import toast from "react-hot-toast";
-import { activeFarmNameAtom, layerConfigAtom } from "state/jotai";
+import { activeFarmNameAtom, layerConfigAtom, pendingFlyToAtom } from "state/jotai";
 import { MapContext } from "app/context/map_context";
 import { match } from "ts-pattern";
 import { type ILayerConfig, zLayerConfig } from "types";
@@ -876,7 +876,7 @@ export function FincasPopover({ onDone }: { onDone: () => void }) {
   const layerConfigs = useAtomValue(layerConfigAtom);
   const items = [...layerConfigs.values()];
   const setFarmName = useSetAtom(activeFarmNameAtom);
-  const map = useContext(MapContext);
+  const setPendingFlyTo = useSetAtom(pendingFlyToAtom);
   const [search, setSearch] = useState("");
   const nextAt = getNextAt(items);
 
@@ -932,65 +932,24 @@ export function FincasPopover({ onDone }: { onDone: () => void }) {
               });
               setFarmName(farm.name);
 
-              // Fetch the style JSON to get the center, then fly
-              // there after the map finishes loading the new style.
-              if (map?.map) {
-                const m = map.map;
-                try {
-                  const styleUrl =
-                    layer.url.replace(
-                      "mapbox://styles/",
-                      "https://api.mapbox.com/styles/v1/",
-                    ) + `?access_token=${layer.token}`;
-                  const resp = await fetch(styleUrl);
-                  const styleJson = await resp.json();
-                  const styleCenter = styleJson.center as
-                    | [number, number]
-                    | undefined;
-
-                  // Wait for new style to be applied, then tiles
-                  // to load, then center on a bloque-labels
-                  // feature (or fall back to the style center).
-                  m.once("styledata", () => {
-                    m.once("idle", () => {
-                      try {
-                        const style = m.getStyle();
-                        const bloqueLayer = style?.layers?.find(
-                          (l) => l.id === "bloque-labels",
-                        );
-                        if (bloqueLayer && "source" in bloqueLayer) {
-                          const features = m.querySourceFeatures(
-                            bloqueLayer.source as string,
-                            {
-                              sourceLayer:
-                                (bloqueLayer as any)["source-layer"] ??
-                                "bloque-labels",
-                            },
-                          );
-                          if (features.length > 0) {
-                            const geom = features[0].geometry;
-                            let center: [number, number] | undefined;
-                            if (geom.type === "Point") {
-                              center = geom.coordinates as [
-                                number,
-                                number,
-                              ];
-                            }
-                            if (center) {
-                              m.flyTo({ center, zoom: 15.5 });
-                              return;
-                            }
-                          }
-                        }
-                      } catch (_e) {}
-                      // Fallback: use the style's center
-                      if (styleCenter) {
-                        m.flyTo({ center: styleCenter, zoom: 15.5 });
-                      }
-                    });
+              // Fetch the style JSON center and set it as a pending
+              // flyTo. The map component will execute the flyTo after
+              // the new style finishes loading.
+              try {
+                const styleUrl =
+                  layer.url.replace(
+                    "mapbox://styles/",
+                    "https://api.mapbox.com/styles/v1/",
+                  ) + `?access_token=${layer.token}`;
+                const resp = await fetch(styleUrl);
+                const styleJson = await resp.json();
+                if (styleJson.center) {
+                  setPendingFlyTo({
+                    center: styleJson.center,
+                    zoom: 15.5,
                   });
-                } catch (_e) {}
-              }
+                }
+              } catch (_e) {}
 
               onDone();
             }}

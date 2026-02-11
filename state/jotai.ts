@@ -132,7 +132,7 @@ type PanelLayout = "AUTO" | "FLOATING" | "VERTICAL";
 export const splitsAtom = atom<Splits>({
   layout: "AUTO",
   bottom: 500,
-  rightOpen: true,
+  rightOpen: false,
   right: 320,
   leftOpen: true,
   left: 200,
@@ -299,6 +299,11 @@ export enum TabOption {
 }
 
 export const tabAtom = atom<TabOption>(TabOption.Feature);
+
+export const pendingFlyToAtom = atom<{
+  center: [number, number];
+  zoom: number;
+} | null>(null);
 
 export type VirtualColumns = string[];
 export const virtualColumnsAtom = atom<VirtualColumns>([]);

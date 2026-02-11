@@ -15,7 +15,7 @@ import {
 } from "state/jotai";
 import { FeatureEditorFolderInner } from "./feature_editor/feature_editor_folder";
 
-const TAB_ORDER_RIGHT = [TabOption.Feature, TabOption.Table];
+const TAB_ORDER_RIGHT = [TabOption.Table];
 const TAB_ORDER_BOTTOM = [TabOption.Table, TabOption.Feature, TabOption.List];
 
 function Tab({

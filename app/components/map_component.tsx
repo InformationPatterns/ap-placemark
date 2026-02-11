@@ -31,6 +31,7 @@ import {
   layerConfigAtom,
   Mode,
   modeAtom,
+  pendingFlyToAtom,
   selectedFeaturesAtom,
 } from "state/jotai";
 import type { DragTarget, HandlerContext, IWrappedFeature } from "types";
@@ -43,7 +44,7 @@ import { newFeatureId } from "app/lib/id";
 import { usePersistence } from "app/lib/persistence/context";
 import { fMoment } from "app/lib/persistence/moment";
 import { useHotkeys } from "integrations/hotkeys";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useAtomCallback } from "jotai/utils";
 import toast from "react-hot-toast";
 import { LastSearchResult } from "./last_search_result";
@@ -102,6 +103,13 @@ export const MapComponent = memo(function MapComponent({
   const dragTargetRef: React.MutableRefObject<DragTarget | null> =
     useRef<DragTarget>(null);
   const mapHandlers = useRef<PMapHandlers>(null);
+
+  // Pending flyTo from finca selection
+  const pendingFlyToRef = useRef<{ center: [number, number]; zoom: number } | null>(null);
+  const setPendingFlyTo = useSetAtom(pendingFlyToAtom);
+  const pendingFlyTo = useAtomValue(pendingFlyToAtom);
+  // Sync atom to ref so the effect closure always has the latest value
+  pendingFlyToRef.current = pendingFlyTo;
 
   // Context
   const map = useContext(MapContext);
@@ -207,6 +215,13 @@ export const MapComponent = memo(function MapComponent({
           layerConfigs,
           symbolization: symbolization || SYMBOLIZATION_NONE,
           previewProperty: label,
+        })
+        .then(() => {
+          const flyTo = pendingFlyToRef.current;
+          if (flyTo) {
+            map.map.flyTo(flyTo);
+            setPendingFlyTo(null);
+          }
         })
         .catch((e) => captureException(e));
     },
